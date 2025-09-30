@@ -1,0 +1,277 @@
+Taller: POO y modificadores de acceso en
+Python
+
+Instrucciones
+• Lee cada fragmento, ejecuta mentalmente el código y responde lo que se pide.
+• Recuerda: en Python no hay “modificadores” como en Java/C++; se usan
+convenciones:
+o Público: nombre
+o Protegido (convención): _nombre
+o Privado (name mangling): __nombre se convierte a _<Clase>__nombre
+• No edites el código salvo que la pregunta lo solicite.
+
+Parte A. Conceptos y lectura de código
+1) Selección múltiple
+Dada la clase:
+class A:
+x = 1
+_y = 2
+__z = 3
+a = A()
+
+¿Cuáles de los siguientes nombres existen como atributos accesibles directamente desde
+a? A,B,D.
+A) a.x
+B) a._y
+C) a.__z: Esta no es debido a name mangling que convierte __y -> a._A__y
+D) a._A__z
+
+2) Salida del programa
+class A:
+def __init__(self):
+self.__secret = 42
+a = A()
+print(hasattr(a, '__secret'), hasattr(a, '_A__secret'))
+
+¿Qué imprime? Imprime: "False True"
+
+3) Verdadero/Falso (explica por qué)
+a) El prefijo _ impide el acceso desde fuera de la clase. Falso, pues Python no impide el acceso pero es una una señal para no usarlo desde fuera.
+b) El prefijo __ hace imposible acceder al atributo. Falso, se puede acceder al atributo aplicando el name mangling, es decir _<Clase>__nombre aunque no es recomendado hacerlo, esto sirve para evitar coalisiones de nombres y reforzar la encapsulación 
+c) El name mangling depende del nombre de la clase. Si depende como se indica: _<Clase>__nombre, ya que puede variar dependiendo el nombre de la clase. 
+
+4) Lectura de código
+class Base:
+def __init__(self):
+self._token = "abc"
+class Sub(Base):
+def reveal(self):
+return self._token
+print(Sub().reveal())
+
+¿Qué se imprime y por qué no hay error de acceso?
+Imprice "abc" debido a que a pesar de que el atributo "_token" este protegido al tener el _, no se bloquea el acceso y se hereda la clase Base a Sub. 
+
+5) Name mangling en herencia
+
+class Base:
+def __init__(self):
+self.__v = 1
+class Sub(Base):
+def __init__(self):
+super().__init__()
+self.__v = 2
+def show(self):
+return (self.__v, self._Base__v)
+print(Sub().show())
+
+¿Cuál es la salida?
+La salida es (2, 1)
+
+6) Identifica el error
+class Caja:
+__slots__ = ('x',)
+c = Caja()
+c.x = 10
+c.y = 20
+
+¿Qué ocurre y por qué?
+El error ocurre debido a que y no es un atributo de caja y simplemente se soluciona declarándola en __slots__ de este modo: __slots__ = ('x', 'y')
+
+7) Rellenar espacios
+Completa para que b tenga un atributo “protegido por convención”.
+class B:
+    def __init__(self):
+        self._atributo = 99
+
+
+Escribe el nombre correcto del atributo.
+
+8) Lectura de métodos “privados”
+class M:
+def __init__(self):
+self._state = 0
+def _step(self):
+self._state += 1
+return self._state
+def __tick(self):
+return self._step()
+m = M()
+print(hasattr(m, '_step'), hasattr(m, '__tick'), hasattr(m,
+'_M__tick'))
+
+¿Qué imprime y por qué?
+El programa imprime "True False True" debido a que _step no tiene bloqueado el acceso, __tick no se encuentra al atributo debido a que se aplico name mangling y _M__tick da true debido a que se le aplico el name mangling por tener doble guion bajo.
+
+9) Acceso a atributos privados
+class S:
+def __init__(self):
+self.__data = [1, 2]
+def size(self):
+return len(self.__data)
+s = S()
+# Accede a __data (solo para comprobar), sin modificar el código de la
+clase:
+# Escribe una línea que obtenga la lista usando name mangling y la
+imprima.
+
+Escribe la línea solicitada.
+print(s._S__data)
+
+10) Comprensión de dir y mangling
+class D:
+def __init__(self):
+self.__a = 1
+self._b = 2
+self.c = 3
+d = D()
+names = [n for n in dir(d) if 'a' in n]
+print(names)
+
+¿Cuál de estos nombres es más probable que aparezca en la lista: __a, _D__a o a?
+Explica.
+_D__a es el que más probabilidad tiene de aparecer en la lista debido a que el atributo tiene doble guion bajo, almacenándose como atributo privado y a este se le aplica name mangling.
+
+Parte B. Encapsulación con @property y validación
+11) Completar propiedad con validación
+Completa para que saldo nunca sea negativo.
+class Cuenta:
+def __init__(self, saldo):
+self._saldo = 0
+self.saldo = saldo
+@property
+def saldo(self):
+______
+@saldo.setter
+def saldo(self, value):
+if value < 0;
+   self._saldo = 0
+else: 
+   self._saldo = value
+# Validar no-negativo
+______
+
+12) Propiedad de solo lectura
+Convierte temperatura_f en un atributo de solo lectura que se calcula desde
+temperatura_c.
+class Termometro:
+def __init__(self, temperatura_c):
+self._c = float(temperatura_c)
+@property 
+def temperatura_f(self):
+return self._c *9/5 + 32
+# Define aquí la propiedad temperatura_f: F = C * 9/5 + 32
+
+Escribe la propiedad.
+
+13) Invariante con tipo
+Haz que nombre sea siempre str. Si asignan algo que no sea str, lanza TypeError.
+class Usuario:
+def __init__(self, nombre):
+self.nombre = nombre
+@property 
+def nombre(self):
+return self._nombre
+@nombre.setter
+def nombre(self, value):
+if not isinstance(value, str):
+raise TypeError("nombre debe ser str")
+self._nombre = value
+# Implementa property para nombre
+
+14) Encapsulación de colección
+Expón una vista de solo lectura de una lista interna.
+class Registro:
+def __init__(self):
+self.__items = []
+def add(self, x):
+self.__items.append(x)
+@property
+def ítems(self):
+return self.__items[:]
+# Crea una propiedad 'items' que retorne una tupla inmutable con
+el contenido
+
+Parte C. Diseño y refactor
+15) Refactor a encapsulación
+Refactoriza para evitar acceso directo al atributo y validar que velocidad sea entre 0 y
+200.
+class Motor:
+def __init__(self, velocidad):
+self.velocidad = velocidad # refactor aquí
+@property
+def velocidad(self):
+return self._velocidad
+@velocidad.setter
+def velocidad(self, value):
+if 0 <= value <= 200:
+self._velocidad = value
+else:
+raise ValueError("La velocidad debe estar entre 0 y 200")
+Escribe la versión con @property.
+
+16) Elección de convención
+Explica con tus palabras cuándo usarías _atributo frente a __atributo en una API
+pública de una librería.
+
+Para una API publica de una librería, emplearía el __atributo cuando se tenga un dato de carácter sensible como alguna clave y el protegido para revisar la fecha en la que un libro puede estar disponible o no y el número de copias del libro.
+
+17) Detección de fuga de encapsulación
+¿Qué problema hay aquí?
+class Buffer:
+def __init__(self, data):
+self._data = list(data)
+def get_data(self):
+return self._data
+
+Propón una corrección.
+return list(self._data)
+
+18) Diseño con herencia y mangling
+¿Dónde fallará esto y cómo lo arreglas? Cuando se hereda el atributo, Python utiliza name mangling y es por ello que no funciona. 
+class A:
+def __init__(self):
+self.__x = 1
+
+class B(A):
+def get(self):
+return self._A__x
+
+19) Composición y fachada
+Completa para exponer solo un método seguro de un objeto interno.
+class _Repositorio:
+def __init__(self):
+self._datos = {}
+def guardar(self, k, v):
+self._datos[k] = v
+def _dump(self):
+return dict(self._datos)
+class Servicio:
+def __init__(self):
+self.__repo = _Repositorio()
+def guardar(self, k, v):
+self.__repo.guardar
+# Expón un método 'guardar' que delegue en el repositorio,
+# pero NO expongas _dump ni __repo.
+
+20) Mini-kata
+class ContadorSeguro:
+def __init__(self):
+self._n = 0
+def inc(self):
+self._n += 1
+self.__log()
+@property
+def n(self):
+return self._n
+def __log(self):
+print("tick")
+c = ContadorSeguro()
+c.inc()
+c.inc()
+print(c.n)
+
+LECTURA FINAL: 
+TICK 
+TICK
+2
